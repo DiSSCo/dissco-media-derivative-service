@@ -41,11 +41,11 @@ public class S3Repository {
                   .key(fileName),
           AsyncRequestBody.fromBytes(inputStream.readAllBytes())).get();
     } catch (ExecutionException e) {
-      log.error("Failed to retrieve image", e);
+      log.error("Failed to upload image to s3", e);
       throw new S3UploadException();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      log.error("Thread interrupted when retrieving image", e);
+      log.error("Thread interrupted when uploading image to s3", e);
       throw new S3UploadException();
     }
   }
