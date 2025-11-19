@@ -46,7 +46,7 @@ public class ProcessingService {
     var dimensions = getDimensions(originalImage);
     var resizedImage = downsizeImage(dimensions, originalImage);
     s3Repository.uploadResults(resizedImage, media.getId());
-    log.info("Finished uploading {} images", media.getId());
+    log.info("Finished uploading {} image", media.getId());
   }
 
   private DigitalMedia retrieveMediaObject(CreateUpdateTombstoneEvent event)
