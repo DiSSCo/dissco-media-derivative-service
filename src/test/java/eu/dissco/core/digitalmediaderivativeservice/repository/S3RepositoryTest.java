@@ -1,12 +1,15 @@
 package eu.dissco.core.digitalmediaderivativeservice.repository;
 
+import static eu.dissco.core.digitalmediaderivativeservice.util.TestUtils.PREFIX;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 
+import eu.dissco.core.digitalmediaderivativeservice.exception.ProcessingFailedException;
 import eu.dissco.core.digitalmediaderivativeservice.exception.S3UploadException;
+import eu.dissco.core.digitalmediaderivativeservice.property.ApplicationProperties;
 import eu.dissco.core.digitalmediaderivativeservice.property.S3Properties;
 import java.io.File;
 import java.io.IOException;
@@ -30,23 +33,26 @@ class S3RepositoryTest {
   private S3AsyncClient s3AsyncClient;
   @Mock
   private S3Properties s3Properties;
+  @Mock
+  private ApplicationProperties applicationProperties;
 
   private S3Repository s3Repository;
 
   @BeforeEach
   void setUp() {
-    this.s3Repository = new S3Repository(s3AsyncClient, s3Properties);
+    this.s3Repository = new S3Repository(s3AsyncClient, s3Properties, applicationProperties);
   }
 
   @Test
   void testUploadResults()
-      throws IOException, S3UploadException, ExecutionException, InterruptedException {
+      throws IOException, ExecutionException, InterruptedException, ProcessingFailedException {
     // Given
     var image = ImageIO.read(new File(
         new ClassPathResource("src/test/resources/test-images/test-image-1.jpeg").getPath()));
     var mockResponse = mock(CompletableFuture.class);
     given(s3AsyncClient.putObject(any(Consumer.class), any(AsyncRequestBody.class))).willReturn(
         mockResponse);
+    given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
     s3Repository.uploadResults(image, "https://doi.org/TEST/XXX-XXX-XXX");
@@ -65,6 +71,7 @@ class S3RepositoryTest {
     given(s3AsyncClient.putObject(any(Consumer.class), any(AsyncRequestBody.class))).willReturn(
         mockResponse);
     given(mockResponse.get()).willThrow(ExecutionException.class);
+    given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When  / Then
     assertThrows(S3UploadException.class,
@@ -81,6 +88,7 @@ class S3RepositoryTest {
     given(s3AsyncClient.putObject(any(Consumer.class), any(AsyncRequestBody.class))).willReturn(
         mockResponse);
     given(mockResponse.get()).willThrow(InterruptedException.class);
+    given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When  / Then
     assertThrows(S3UploadException.class,

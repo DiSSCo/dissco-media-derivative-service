@@ -18,7 +18,8 @@ public class RabbitMqConsumerService {
   private final ObjectMapper mapper;
   private final ProcessingService processingService;
 
-  @RabbitListener(queues = {"${rabbitmq.queue-name:digital-media-derivative-queue}"})
+  @RabbitListener(queues = {
+      "${rabbitmq.queue-name:digital-media-derivative-queue}"}, containerFactory = "consumerBatchContainerFactory")
   public void getMessage(@Payload String message) throws IOException, ProcessingFailedException {
     var event = mapper.readValue(message, CreateUpdateTombstoneEvent.class);
     processingService.handleMessage(event);

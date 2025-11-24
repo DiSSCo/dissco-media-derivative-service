@@ -38,15 +38,21 @@ public class ProcessingService {
   }
 
   public void handleMessage(CreateUpdateTombstoneEvent event)
-      throws IOException, ProcessingFailedException {
+      throws ProcessingFailedException, JsonProcessingException {
     log.info("Received CreateUpdateTombstoneEvent: {}", event);
     var media = retrieveMediaObject(event);
     log.info("Retrieving image for accessURI: {}", media.getAcAccessURI());
-    var originalImage = ImageIO.read(URI.create(media.getAcAccessURI()).toURL());
-    var dimensions = getDimensions(originalImage);
-    var resizedImage = downsizeImage(dimensions, originalImage);
-    s3Repository.uploadResults(resizedImage, media.getId());
-    log.info("Finished uploading {} image", media.getId());
+    try {
+      var originalImage = ImageIO.read(URI.create(media.getAcAccessURI()).toURL());
+      var dimensions = getDimensions(originalImage);
+      var resizedImage = downsizeImage(dimensions, originalImage);
+      s3Repository.uploadResults(resizedImage, media.getId());
+      log.info("Finished uploading {} image", media.getId());
+    } catch (IOException e) {
+      log.error("Error while reading image for accessURI: {}", media.getAcAccessURI(), e);
+      throw new ProcessingFailedException(
+          "Error while reading image for accessURI: " + media.getAcAccessURI());
+    }
   }
 
   private DigitalMedia retrieveMediaObject(CreateUpdateTombstoneEvent event)

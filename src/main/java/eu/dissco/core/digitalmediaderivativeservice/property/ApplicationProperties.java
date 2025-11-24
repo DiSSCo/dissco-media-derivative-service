@@ -20,4 +20,7 @@ public class ApplicationProperties {
   @Positive
   private float maxImageSize = 2048f;
 
+  @NotBlank
+  private String prefix;
+
 }

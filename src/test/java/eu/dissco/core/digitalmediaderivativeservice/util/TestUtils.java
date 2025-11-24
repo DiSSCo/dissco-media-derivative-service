@@ -8,6 +8,8 @@ import eu.dissco.core.digitalmediaderivativeservice.schema.CreateUpdateTombstone
 
 public class TestUtils {
 
+  public static final String PREFIX = "Test";
+
   public static final ObjectMapper MAPPER = new ObjectMapper().findAndRegisterModules()
       .setSerializationInclusion(Include.NON_NULL);
 
