@@ -1,7 +1,5 @@
 package eu.dissco.core.digitalmediaderivativeservice.service;
 
-import static eu.dissco.core.digitalmediaderivativeservice.configuration.ApplicationConfiguration.DATE_STRING;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.digitalmediaderivativeservice.domain.DigitalMediaEvent;
@@ -21,8 +19,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -36,9 +32,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class ProcessingService {
-
-  private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_STRING).withZone(
-      ZoneOffset.UTC);
 
   private final ObjectMapper objectMapper;
   private final ApplicationProperties properties;
@@ -125,19 +118,19 @@ public class ProcessingService {
   }
 
   private void setMediaDerivative(DigitalMedia media, BufferedImage resizedImage) {
-    var now = Instant.now();
+    var now = Date.from(Instant.now());
     var derivative = new DigitalMediaDerivative()
         .withAcAccessURI(properties.getApiUrl() + media.getId() + "/derivative")
         .withDctermsTitle("Derivative of " + media.getId())
         .withDctermsDescription("Image Derivative created by DiSSCo")
         .withExifPixelXDimension(resizedImage.getWidth())
         .withExifPixelYDimension(resizedImage.getHeight())
-        .withDctermsCreated(Date.from(now))
+        .withDctermsCreated(now)
         .withOdsHasAgents(List.of(AgentUtils.createMachineAgent(properties.getName(),
             properties.getPid(), "media-derivative-service", DctermsType.DOI,
             Type.SCHEMA_SOFTWARE_APPLICATION)))
         .withDctermsFormat("image/jpeg")
-        .withDctermsModified(formatter.format(now))
+        .withDctermsModified(now)
         .withDctermsRights(media.getDctermsRights())
         .withAcSubtype(media.getAcSubtype())
         .withAcSubjectOrientation(media.getAcSubjectOrientation())

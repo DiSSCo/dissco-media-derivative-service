@@ -1,7 +1,5 @@
 package eu.dissco.core.digitalmediaderivativeservice.util;
 
-import static eu.dissco.core.digitalmediaderivativeservice.configuration.ApplicationConfiguration.DATE_STRING;
-
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -15,8 +13,6 @@ import eu.dissco.core.digitalmediaderivativeservice.schema.DigitalMediaDerivativ
 import eu.dissco.core.digitalmediaderivativeservice.schema.Identifier;
 import eu.dissco.core.digitalmediaderivativeservice.utils.AgentUtils;
 import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -27,9 +23,6 @@ public class TestUtils {
   public static final Instant CREATED = Instant.parse("2025-12-10T16:29:24.000Z");
   public static final ObjectMapper MAPPER = new ObjectMapper().findAndRegisterModules()
       .setSerializationInclusion(Include.NON_NULL);
-  private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DATE_STRING)
-      .withZone(
-          ZoneOffset.UTC);
 
   public static DigitalMediaEvent givenDigitalMediaEvent() throws JsonProcessingException {
     return new DigitalMediaEvent(Collections.emptySet(),
@@ -54,7 +47,7 @@ public class TestUtils {
     var derivative = new eu.dissco.core.digitalmediaderivativeservice.schema.DigitalMediaDerivative()
         .withDctermsTitle("Derivative of https://doi.org/TEST/WKT-SQB-ZNC")
         .withDctermsDescription("Image Derivative created by DiSSCo")
-        .withDctermsModified(FORMATTER.format(CREATED))
+        .withDctermsModified(Date.from(CREATED))
         .withDctermsCreated(Date.from(CREATED))
         .withDctermsRights("http://creativecommons.org/publicdomain/zero/1.0/legalcode")
         .withDctermsType(DctermsType.STILL_IMAGE)
