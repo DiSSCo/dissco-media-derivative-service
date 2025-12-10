@@ -135,7 +135,6 @@ public class ProcessingService {
         .withAcSubtype(media.getAcSubtype())
         .withAcSubjectOrientation(media.getAcSubjectOrientation())
         .withAcSubjectOrientationLiteral(media.getAcSubjectOrientationLiteral())
-        .withAcSubtype(media.getAcSubtype())
         .withAcSubtypeLiteral(media.getAcSubtypeLiteral())
         .withDctermsType(mapDcTermsType(media));
     if (media.getOdsHasMediaDerivatives() == null) {
