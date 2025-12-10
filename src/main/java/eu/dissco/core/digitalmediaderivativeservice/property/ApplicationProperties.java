@@ -23,4 +23,7 @@ public class ApplicationProperties {
   @NotBlank
   private String prefix;
 
+  @NotBlank
+  private String apiUrl;
+
 }
