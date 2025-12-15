@@ -28,7 +28,7 @@ class RabbitMqPublisherServiceTest {
 
   @BeforeAll
   static void setupContainer() throws IOException, InterruptedException {
-    container = new RabbitMQContainer("rabbitmq:4.2-management-alpine");
+    container = new RabbitMQContainer("rabbitmq:4.0.0-management-alpine");
     container.start();
     container.execInContainer("rabbitmqadmin", "declare", "exchange", "name=digital-media-exchange",
         "type=direct", "durable=true");
