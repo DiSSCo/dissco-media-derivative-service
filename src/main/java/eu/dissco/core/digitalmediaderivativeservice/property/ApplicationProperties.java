@@ -15,12 +15,15 @@ public class ApplicationProperties {
   private String name = "DiSSCo Media Derivative Service";
 
   @NotBlank
-  private String pid = "https://doi.org/Test/Test";
+  private String pid = "https://doi.org/10.5281/zenodo.17935570";
 
   @Positive
   private float maxImageSize = 2048f;
 
   @NotBlank
   private String prefix;
+
+  @NotBlank
+  private String apiUrl;
 
 }
