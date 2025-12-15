@@ -46,18 +46,19 @@ public class TestUtils {
     digitalMedia.setExifPixelYDimension(originalHeight);
     var derivative = new eu.dissco.core.digitalmediaderivativeservice.schema.DigitalMediaDerivative()
         .withDctermsTitle("Derivative of https://doi.org/TEST/WKT-SQB-ZNC")
-        .withDctermsDescription("Image Derivative created by DiSSCo")
+        .withDctermsDescription(
+            "Image Derivative created by DiSSCo after creation of the Digital Media, maximum size of 2048.0 pixels on the longest side.")
         .withDctermsModified(Date.from(CREATED))
         .withDctermsCreated(Date.from(CREATED))
         .withDctermsRights("http://creativecommons.org/publicdomain/zero/1.0/legalcode")
         .withDctermsType(DctermsType.STILL_IMAGE)
         .withDctermsFormat("image/jpeg")
         .withAcAccessURI(
-            "https://dev.dissco.tech/api/dm/v1/https://doi.org/TEST/WKT-SQB-ZNC/derivative")
+            "https://dev.dissco.tech/api/dm/v1/TEST/WKT-SQB-ZNC/derivative")
         .withExifPixelXDimension(width)
         .withExifPixelYDimension(height)
         .withOdsHasAgents(List.of(AgentUtils.createMachineAgent("DiSSCo Media Derivative Service",
-            "https://doi.org/Test/Test", "media-derivative-service",
+            "https://doi.org/10.5281/zenodo.17935570", "media-derivative-service",
             Identifier.DctermsType.DOI,
             Type.SCHEMA_SOFTWARE_APPLICATION)));
     digitalMedia.setOdsHasMediaDerivatives(Collections.singletonList(derivative));

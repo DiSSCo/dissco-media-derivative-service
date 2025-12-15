@@ -33,6 +33,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ProcessingService {
 
+  public static final String DOI_PROXY = "https://doi.org/";
+
   private final ObjectMapper objectMapper;
   private final ApplicationProperties properties;
   private final S3Repository s3Repository;
@@ -71,20 +73,11 @@ public class ProcessingService {
     }
   }
 
-  private static DigitalMediaDerivative.DctermsType mapDcTermsType(DigitalMedia media) {
-    return DigitalMediaDerivative.DctermsType.fromValue(media.getDctermsType().value());
-  }
-
   public void handleMessage(CreateUpdateTombstoneEvent event)
       throws ProcessingFailedException, JsonProcessingException {
-    log.info("Received Provenance: {}", event);
     if (ProvActivity.Type.ODS_CREATE.equals(event.getProvActivity().getType())) {
+      log.info("Received Provenance: {}", event);
       var media = retrieveMediaObject(event);
-      if (media.getAcAccessURI() == null || media.getAcAccessURI().isBlank()) {
-        log.info("DigitalMedia {} does not have an accessURI, skipping processing.",
-            media.getId());
-        return;
-      }
       log.info("Retrieving image for accessURI: {}", media.getAcAccessURI());
       var originalImage = retrieveImage(media);
       if (originalImage != null) {
@@ -97,6 +90,8 @@ public class ProcessingService {
         publishDigitalMedia(media);
         log.info("Successfully generated a derivative for DigitalMedia {}", media.getId());
       }
+    } else {
+      log.debug("Received non-create event, skipping processing: {}", event);
     }
   }
 
@@ -120,9 +115,11 @@ public class ProcessingService {
   private void setMediaDerivative(DigitalMedia media, BufferedImage resizedImage) {
     var now = Date.from(Instant.now());
     var derivative = new DigitalMediaDerivative()
-        .withAcAccessURI(properties.getApiUrl() + media.getId() + "/derivative")
+        .withAcAccessURI(properties.getApiUrl() + stripDoiPrefix(media.getId()) + "/derivative")
         .withDctermsTitle("Derivative of " + media.getId())
-        .withDctermsDescription("Image Derivative created by DiSSCo")
+        .withDctermsDescription(
+            "Image Derivative created by DiSSCo after creation of the Digital Media, maximum size of "
+                + properties.getMaxImageSize() + " pixels on the longest side.")
         .withExifPixelXDimension(resizedImage.getWidth())
         .withExifPixelYDimension(resizedImage.getHeight())
         .withDctermsCreated(now)
@@ -136,12 +133,17 @@ public class ProcessingService {
         .withAcSubjectOrientation(media.getAcSubjectOrientation())
         .withAcSubjectOrientationLiteral(media.getAcSubjectOrientationLiteral())
         .withAcSubtypeLiteral(media.getAcSubtypeLiteral())
-        .withDctermsType(mapDcTermsType(media));
+        .withDctermsType(
+            DigitalMediaDerivative.DctermsType.fromValue(media.getDctermsType().value()));
     if (media.getOdsHasMediaDerivatives() == null) {
       media.setOdsHasMediaDerivatives(List.of(derivative));
     } else {
       media.getOdsHasMediaDerivatives().add(derivative);
     }
+  }
+
+  private static String stripDoiPrefix(String id) {
+    return id.replace(DOI_PROXY, "");
   }
 
   private DigitalMedia retrieveMediaObject(CreateUpdateTombstoneEvent event)
