@@ -98,7 +98,7 @@ public class ProcessingService {
   private void publishDigitalMedia(DigitalMedia media) throws ProcessingFailedException {
     try {
       var wrapper = new DigitalMediaWrapper(media.getType(), media, null);
-      var event = new DigitalMediaEvent(Collections.emptySet(), wrapper, false);
+      var event = new DigitalMediaEvent(Collections.emptySet(), wrapper, false, false);
       rabbitMqPublisherService.publishDigitalMediaEvent(event);
     } catch (JsonProcessingException ex) {
       log.error("Failed to republish DigitalMedia {}", media.getId(), ex);
