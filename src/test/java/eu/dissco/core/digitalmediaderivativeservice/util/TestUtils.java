@@ -26,7 +26,7 @@ public class TestUtils {
 
   public static DigitalMediaEvent givenDigitalMediaEvent() throws JsonProcessingException {
     return new DigitalMediaEvent(Collections.emptySet(),
-        new DigitalMediaWrapper("ods:DigitalMedia", givenDigitalMedia(), null), false);
+        new DigitalMediaWrapper("ods:DigitalMedia", givenDigitalMedia(), null), false, false);
   }
 
   public static DigitalMediaEvent givenDigitalMediaWithDerivativeEvent(int originalWidth,
@@ -35,7 +35,7 @@ public class TestUtils {
     return new DigitalMediaEvent(Collections.emptySet(),
         new DigitalMediaWrapper("ods:DigitalMedia",
             givenDigitalMediaWithDerivative(originalWidth, originalHeight, width, height),
-            null), false);
+            null), false, false);
   }
 
   public static DigitalMedia givenDigitalMediaWithDerivative(int originalWidth, int originalHeight,
