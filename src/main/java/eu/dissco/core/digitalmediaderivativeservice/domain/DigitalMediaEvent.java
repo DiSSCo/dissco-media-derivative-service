@@ -7,6 +7,7 @@ public record DigitalMediaEvent(
     Set<String> masList,
     @JsonProperty("digitalMedia")
     DigitalMediaWrapper digitalMediaWrapper,
-    Boolean forceMasSchedule) {
+    Boolean forceMasSchedule,
+    Boolean isDataFromSourceSystem) {
 
 }
