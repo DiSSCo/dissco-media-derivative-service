@@ -32,10 +32,10 @@ public class S3Repository {
     return new ByteArrayInputStream(baos.toByteArray());
   }
 
-  public void uploadResults(BufferedImage image, String doi) throws ProcessingFailedException {
+  public void uploadResults(BufferedImage image, String doi, boolean isThumbnail) throws ProcessingFailedException {
     log.info("Uploading results to S3");
     var strippedDoi = doi.replace("https://doi.org/" + applicationProperties.getPrefix() + "/", "");
-    var fileName = strippedDoi + '/' + strippedDoi + "-derivative.jpg";
+    var fileName = strippedDoi + '/' + strippedDoi + (isThumbnail ? "-thumbnail.jpeg" : "-derivative.jpeg");
     try {
       var inputStream = imageToInputStream(image);
       s3Client.putObject(request ->
