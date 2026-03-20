@@ -9,10 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mockStatic;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.dissco.core.digitalmediaderivativeservice.domain.DigitalMediaEvent;
 import eu.dissco.core.digitalmediaderivativeservice.exception.ProcessingFailedException;
 import eu.dissco.core.digitalmediaderivativeservice.property.ApplicationProperties;
@@ -60,7 +58,7 @@ class ProcessingServiceTest {
 
   private ProcessingService processingService;
 
-  static Stream<Arguments> handleMessageProvider() throws JsonProcessingException {
+  static Stream<Arguments> handleMessageProvider() {
     return Stream.of(
         Arguments.of("test-image-1.jpeg", 1920, 1795,
             givenDigitalMediaWithDerivativeEvent(1920, 1795, 1920, 1795, 400, 373)),
@@ -155,7 +153,8 @@ class ProcessingServiceTest {
       then(s3Repository).should()
           .uploadResults(imageCaptor.capture(), eq("https://doi.org/TEST/WKT-SQB-ZNC"), eq(false));
       then(s3Repository).should()
-          .uploadResults(any(BufferedImage.class), eq("https://doi.org/TEST/WKT-SQB-ZNC"), eq(true));
+          .uploadResults(any(BufferedImage.class), eq("https://doi.org/TEST/WKT-SQB-ZNC"),
+              eq(true));
       then(rabbitMqPublisherService).should().publishDigitalMediaEvent(expectedDigitalMediaEvent);
       assertThat(imageCaptor.getValue().getWidth()).isEqualTo(width);
       assertThat(imageCaptor.getValue().getHeight()).isEqualTo(height);
@@ -174,7 +173,7 @@ class ProcessingServiceTest {
   @MethodSource("ignoredMessageProvider")
   @ParameterizedTest
   void testIgnoredDigitalMediaObject(CreateUpdateTombstoneEvent event)
-      throws ProcessingFailedException, JsonProcessingException {
+      throws ProcessingFailedException {
     // Given
 
     // When
@@ -212,28 +211,6 @@ class ProcessingServiceTest {
 
       // When / Then
       assertThrows(ProcessingFailedException.class, () -> processingService.handleMessage(event));
-    }
-  }
-
-  @Test
-  void testRabbitExceptionImage() throws IOException, ProcessingFailedException {
-    // Given
-    var event = getCreateUpdateTombstoneEvent();
-    var image = ImageIO.read(new File(
-        new ClassPathResource("src/test/resources/test-images/test-image-1.jpeg").getPath()));
-    try (MockedStatic<ImageIO> utilities = Mockito.mockStatic(ImageIO.class)) {
-      utilities.when(() -> ImageIO.read(
-          URI.create("https://medialib.naturalis.nl/file/id/RMNH.INS.1339663_1/format/large")
-              .toURL())).thenReturn(image);
-      doThrow(JsonProcessingException.class).when(rabbitMqPublisherService)
-          .publishDigitalMediaEvent(any());
-
-      // When
-      assertThrows(ProcessingFailedException.class, () -> processingService.handleMessage(event));
-
-      // Then
-      then(s3Repository).should()
-          .uploadResults(imageCaptor.capture(), eq("https://doi.org/TEST/WKT-SQB-ZNC"), eq(true));
     }
   }
 }

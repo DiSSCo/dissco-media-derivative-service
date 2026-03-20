@@ -4,7 +4,6 @@ import static eu.dissco.core.digitalmediaderivativeservice.util.TestUtils.MAPPER
 import static eu.dissco.core.digitalmediaderivativeservice.util.TestUtils.givenDigitalMediaEvent;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.dissco.core.digitalmediaderivativeservice.property.RabbitMqProperties;
 import java.io.IOException;
 import org.junit.jupiter.api.AfterAll;
@@ -57,7 +56,7 @@ class RabbitMqPublisherServiceTest {
   }
 
   @Test
-  void testPublishCreateEvent() throws JsonProcessingException {
+  void testPublishCreateEvent() {
     // Given
 
     // When

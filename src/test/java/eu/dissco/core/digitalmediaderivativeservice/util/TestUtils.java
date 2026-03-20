@@ -1,9 +1,9 @@
 package eu.dissco.core.digitalmediaderivativeservice.util;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static eu.dissco.core.digitalmediaderivativeservice.configuration.ApplicationConfiguration.DATE_STRING;
+
+import com.fasterxml.jackson.annotation.JsonSetter.Value;
+import com.fasterxml.jackson.annotation.Nulls;
 import eu.dissco.core.digitalmediaderivativeservice.domain.DigitalMediaEvent;
 import eu.dissco.core.digitalmediaderivativeservice.domain.DigitalMediaWrapper;
 import eu.dissco.core.digitalmediaderivativeservice.schema.Agent.Type;
@@ -13,26 +13,41 @@ import eu.dissco.core.digitalmediaderivativeservice.schema.DigitalMediaDerivativ
 import eu.dissco.core.digitalmediaderivativeservice.schema.DigitalMediaDerivative.DctermsType;
 import eu.dissco.core.digitalmediaderivativeservice.schema.Identifier;
 import eu.dissco.core.digitalmediaderivativeservice.utils.AgentUtils;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 public class TestUtils {
 
   public static final String PREFIX = "Test";
   public static final Instant CREATED = Instant.parse("2025-12-10T16:29:24.000Z");
-  public static final ObjectMapper MAPPER = new ObjectMapper().findAndRegisterModules()
-      .setSerializationInclusion(Include.NON_NULL);
+  public static final JsonMapper MAPPER = JsonMapper.builder()
+      .findAndAddModules()
+      .defaultDateFormat(new SimpleDateFormat(DATE_STRING))
+      .defaultTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC))
+      .withConfigOverride(List.class, cfg ->
+          cfg.setNullHandling(Value.forValueNulls(Nulls.AS_EMPTY)))
+      .withConfigOverride(Map.class, cfg ->
+          cfg.setNullHandling(Value.forValueNulls(Nulls.AS_EMPTY)))
+      .withConfigOverride(Set.class, cfg ->
+          cfg.setNullHandling(Value.forValueNulls(Nulls.AS_EMPTY)))
+      .build();
 
-  public static DigitalMediaEvent givenDigitalMediaEvent() throws JsonProcessingException {
+  public static DigitalMediaEvent givenDigitalMediaEvent() {
     return new DigitalMediaEvent(Collections.emptySet(),
         new DigitalMediaWrapper("ods:DigitalMedia", givenDigitalMedia(), null), false, false);
   }
 
   public static DigitalMediaEvent givenDigitalMediaWithDerivativeEvent(int originalWidth,
-      int originalHeight, int width, int height, int thumbnailWidth, int thumbnailHeight)
-      throws JsonProcessingException {
+      int originalHeight, int width, int height, int thumbnailWidth, int thumbnailHeight) {
     return new DigitalMediaEvent(Collections.emptySet(),
         new DigitalMediaWrapper("ods:DigitalMedia",
             givenDigitalMediaWithDerivative(originalWidth, originalHeight, width, height,
@@ -41,8 +56,7 @@ public class TestUtils {
   }
 
   public static DigitalMedia givenDigitalMediaWithDerivative(int originalWidth, int originalHeight,
-      int width, int height, int thumbnailWidth, int thumbnailHeight)
-      throws JsonProcessingException {
+      int width, int height, int thumbnailWidth, int thumbnailHeight) {
     var digitalMedia = givenDigitalMedia();
     digitalMedia.setExifPixelXDimension(originalWidth);
     digitalMedia.setExifPixelYDimension(originalHeight);
@@ -78,12 +92,11 @@ public class TestUtils {
   }
 
 
-  public static CreateUpdateTombstoneEvent getCreateUpdateTombstoneEvent()
-      throws JsonProcessingException {
+  public static CreateUpdateTombstoneEvent getCreateUpdateTombstoneEvent() {
     return MAPPER.convertValue(givenProvenanceEventJson(), CreateUpdateTombstoneEvent.class);
   }
 
-  public static DigitalMedia givenDigitalMedia() throws JsonProcessingException {
+  public static DigitalMedia givenDigitalMedia() {
     return MAPPER.readValue(givenDigitalMediaString(), DigitalMedia.class);
   }
 
@@ -324,7 +337,7 @@ public class TestUtils {
         """;
   }
 
-  public static JsonNode givenProvenanceEventJson() throws JsonProcessingException {
+  public static JsonNode givenProvenanceEventJson() {
     return MAPPER.readTree(
         """
             {
