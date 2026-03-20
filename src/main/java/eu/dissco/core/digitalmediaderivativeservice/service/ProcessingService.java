@@ -19,6 +19,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -102,7 +103,7 @@ public class ProcessingService {
     var resizedImage = downsizeImage(dimension, originalImage);
     s3Repository.uploadResults(resizedImage, media.getId(), isThumbnail);
     log.info(
-        "Finished uploading " + (isThumbnail ? "thumbnail" : "derivative") + "of image with id {}",
+        "Finished uploading {} of image with id {}", isThumbnail ? "thumbnail" : "derivative",
         media.getId());
     return resizedImage;
   }
@@ -157,7 +158,9 @@ public class ProcessingService {
         .withDctermsType(
             DigitalMediaDerivative.DctermsType.fromValue(media.getDctermsType().value()));
     if (media.getOdsHasMediaDerivatives() == null) {
-      media.setOdsHasMediaDerivatives(List.of(derivative));
+      var derivativeList = new ArrayList<DigitalMediaDerivative>();
+      derivativeList.add(derivative);
+      media.setOdsHasMediaDerivatives(derivativeList);
     } else {
       media.getOdsHasMediaDerivatives().add(derivative);
     }
