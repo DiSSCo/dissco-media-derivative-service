@@ -18,7 +18,10 @@ public class ApplicationProperties {
   private String pid = "https://doi.org/10.5281/zenodo.17935570";
 
   @Positive
-  private float maxImageSize = 2048f;
+  private float maxDerivativeImageSize = 2048f;
+
+  @Positive
+  private float maxThumbnailImageSize = 400f;
 
   @NotBlank
   private String prefix;

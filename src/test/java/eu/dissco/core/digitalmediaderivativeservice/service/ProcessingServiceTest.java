@@ -63,17 +63,17 @@ class ProcessingServiceTest {
   static Stream<Arguments> handleMessageProvider() throws JsonProcessingException {
     return Stream.of(
         Arguments.of("test-image-1.jpeg", 1920, 1795,
-            givenDigitalMediaWithDerivativeEvent(1920, 1795, 1920, 1795)),
+            givenDigitalMediaWithDerivativeEvent(1920, 1795, 1920, 1795, 400, 373)),
         Arguments.of("test-image-2.jpeg", 1087, 1700,
-            givenDigitalMediaWithDerivativeEvent(1087, 1700, 1087, 1700)),
+            givenDigitalMediaWithDerivativeEvent(1087, 1700, 1087, 1700, 255, 400)),
         Arguments.of("test-image-3.jpeg", 1000, 1000,
-            givenDigitalMediaWithDerivativeEvent(1000, 1000, 1000, 1000)),
+            givenDigitalMediaWithDerivativeEvent(1000, 1000, 1000, 1000, 400, 400)),
         Arguments.of("test-image-4.jpeg", 2048, 2048,
-            givenDigitalMediaWithDerivativeEvent(3000, 3000, 2048, 2048)),
+            givenDigitalMediaWithDerivativeEvent(3000, 3000, 2048, 2048, 400, 400)),
         Arguments.of("test-image-5.jpeg", 1985, 2048,
-            givenDigitalMediaWithDerivativeEvent(3033, 3129, 1985, 2048)),
+            givenDigitalMediaWithDerivativeEvent(3033, 3129, 1985, 2048, 387, 400)),
         Arguments.of("test-image-6.jpeg", 2048, 1366,
-            givenDigitalMediaWithDerivativeEvent(7360, 4912, 2048, 1366))
+            givenDigitalMediaWithDerivativeEvent(7360, 4912, 2048, 1366, 400, 266))
     );
   }
 
@@ -153,7 +153,9 @@ class ProcessingServiceTest {
 
       // Then
       then(s3Repository).should()
-          .uploadResults(imageCaptor.capture(), eq("https://doi.org/TEST/WKT-SQB-ZNC"));
+          .uploadResults(imageCaptor.capture(), eq("https://doi.org/TEST/WKT-SQB-ZNC"), eq(false));
+      then(s3Repository).should()
+          .uploadResults(any(BufferedImage.class), eq("https://doi.org/TEST/WKT-SQB-ZNC"), eq(true));
       then(rabbitMqPublisherService).should().publishDigitalMediaEvent(expectedDigitalMediaEvent);
       assertThat(imageCaptor.getValue().getWidth()).isEqualTo(width);
       assertThat(imageCaptor.getValue().getHeight()).isEqualTo(height);
@@ -231,7 +233,7 @@ class ProcessingServiceTest {
 
       // Then
       then(s3Repository).should()
-          .uploadResults(imageCaptor.capture(), eq("https://doi.org/TEST/WKT-SQB-ZNC"));
+          .uploadResults(imageCaptor.capture(), eq("https://doi.org/TEST/WKT-SQB-ZNC"), eq(true));
     }
   }
 }

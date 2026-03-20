@@ -81,18 +81,35 @@ public class ProcessingService {
       log.info("Retrieving image for accessURI: {}", media.getAcAccessURI());
       var originalImage = retrieveImage(media);
       if (originalImage != null) {
-        var dimension = getDimensions(originalImage);
-        var resizedImage = downsizeImage(dimension, originalImage);
-        s3Repository.uploadResults(resizedImage, media.getId());
-        log.info("Finished uploading {} image", media.getId());
+        var derivativeImage = storeImage(originalImage, media, false);
+        var thumbnailImage = storeImage(originalImage, media, true);
         updateOriginalMedia(media, originalImage);
-        setMediaDerivative(media, resizedImage);
+        setMediaDerivative(media, derivativeImage, false);
+        setMediaDerivative(media, thumbnailImage, true);
         publishDigitalMedia(media);
         log.info("Successfully generated a derivative for DigitalMedia {}", media.getId());
       }
     } else {
       log.debug("Received non-create event, skipping processing: {}", event);
     }
+  }
+
+  private BufferedImage storeImage(BufferedImage originalImage, DigitalMedia media,
+      boolean isThumbnail)
+      throws ProcessingFailedException {
+    var maxImageSize = getMaxImageSize(isThumbnail);
+    var dimension = getDimensions(originalImage, maxImageSize);
+    var resizedImage = downsizeImage(dimension, originalImage);
+    s3Repository.uploadResults(resizedImage, media.getId(), isThumbnail);
+    log.info(
+        "Finished uploading " + (isThumbnail ? "thumbnail" : "derivative") + "of image with id {}",
+        media.getId());
+    return resizedImage;
+  }
+
+  private float getMaxImageSize(boolean isThumbnail) {
+    return isThumbnail ? properties.getMaxThumbnailImageSize()
+        : properties.getMaxDerivativeImageSize();
   }
 
   private void publishDigitalMedia(DigitalMedia media) throws ProcessingFailedException {
@@ -112,14 +129,18 @@ public class ProcessingService {
         .withExifPixelYDimension(originalImage.getHeight());
   }
 
-  private void setMediaDerivative(DigitalMedia media, BufferedImage resizedImage) {
+  private void setMediaDerivative(DigitalMedia media, BufferedImage resizedImage,
+      boolean isThumbnail) {
     var now = Date.from(Instant.now());
+    var imageType = isThumbnail ? "Thumbnail" : "Derivative";
+    var maxImageSize = getMaxImageSize(isThumbnail);
     var derivative = new DigitalMediaDerivative()
-        .withAcAccessURI(properties.getApiUrl() + stripDoiPrefix(media.getId()) + "/derivative")
-        .withDctermsTitle("Derivative of " + media.getId())
+        .withAcAccessURI(generateAccessURI(media, isThumbnail))
+        .withDctermsTitle(imageType + " of " + media.getId())
         .withDctermsDescription(
-            "Image Derivative created by DiSSCo after creation of the Digital Media, maximum size of "
-                + properties.getMaxImageSize() + " pixels on the longest side.")
+            "Image " + imageType
+                + " created by DiSSCo after creation of the Digital Media, maximum size of "
+                + maxImageSize + " pixels on the longest side.")
         .withExifPixelXDimension(resizedImage.getWidth())
         .withExifPixelYDimension(resizedImage.getHeight())
         .withDctermsCreated(now)
@@ -142,6 +163,15 @@ public class ProcessingService {
     }
   }
 
+  private String generateAccessURI(DigitalMedia media, boolean isThumbnail) {
+    var baseUri = properties.getApiUrl() + stripDoiPrefix(media.getId());
+    if (isThumbnail) {
+      return baseUri + "/thumbnail";
+    } else {
+      return baseUri + "/derivative";
+    }
+  }
+
   private static String stripDoiPrefix(String id) {
     return id.replace(DOI_PROXY, "");
   }
@@ -156,19 +186,19 @@ public class ProcessingService {
         "Invalid provenance entity: " + objectMapper.writeValueAsString(event));
   }
 
-  private Pair<Float, Float> getDimensions(BufferedImage originalImage) {
+  private Pair<Float, Float> getDimensions(BufferedImage originalImage, Float maxImageSize) {
     var width = originalImage.getWidth();
     var height = originalImage.getHeight();
     var longestSide = Math.max(width, height);
-    if (longestSide <= properties.getMaxImageSize()) {
+    if (longestSide <= maxImageSize) {
       return Pair.of((float) width, (float) height);
     }
     if (width > height) {
-      return Pair.of(properties.getMaxImageSize(), height / (width / properties.getMaxImageSize()));
+      return Pair.of(maxImageSize, height / (width / maxImageSize));
     } else if (height > width) {
-      return Pair.of(width / (height / properties.getMaxImageSize()), properties.getMaxImageSize());
+      return Pair.of(width / (height / maxImageSize), maxImageSize);
     } else {
-      return Pair.of(properties.getMaxImageSize(), properties.getMaxImageSize());
+      return Pair.of(maxImageSize, maxImageSize);
     }
   }
 
