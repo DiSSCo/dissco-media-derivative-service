@@ -201,7 +201,7 @@ class ProcessingServiceTest {
   }
 
   @Test
-  void testIOExceptionImage() throws IOException {
+  void testIOExceptionImage() {
     // Given
     var event = getCreateUpdateTombstoneEvent();
     try (MockedStatic<ImageIO> utilities = Mockito.mockStatic(ImageIO.class)) {

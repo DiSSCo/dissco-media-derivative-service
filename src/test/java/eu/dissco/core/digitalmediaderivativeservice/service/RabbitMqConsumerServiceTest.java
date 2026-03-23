@@ -1,7 +1,9 @@
 package eu.dissco.core.digitalmediaderivativeservice.service;
 
 import static eu.dissco.core.digitalmediaderivativeservice.util.TestUtils.MAPPER;
+import static eu.dissco.core.digitalmediaderivativeservice.util.TestUtils.getCreateUpdateTombstoneEvent;
 import static eu.dissco.core.digitalmediaderivativeservice.util.TestUtils.givenProvenanceEventJson;
+import static org.mockito.BDDMockito.then;
 
 import eu.dissco.core.digitalmediaderivativeservice.exception.ProcessingFailedException;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +32,9 @@ class RabbitMqConsumerServiceTest {
 
     // When / Then
     rabbitMqConsumerService.getMessage(message);
+
+    // Then
+    then(processingService).should().handleMessage(getCreateUpdateTombstoneEvent());
   }
 
 }
