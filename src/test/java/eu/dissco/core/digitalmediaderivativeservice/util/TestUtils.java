@@ -9,6 +9,7 @@ import eu.dissco.core.digitalmediaderivativeservice.domain.DigitalMediaWrapper;
 import eu.dissco.core.digitalmediaderivativeservice.schema.Agent.Type;
 import eu.dissco.core.digitalmediaderivativeservice.schema.CreateUpdateTombstoneEvent;
 import eu.dissco.core.digitalmediaderivativeservice.schema.DigitalMedia;
+import eu.dissco.core.digitalmediaderivativeservice.schema.DigitalMediaDerivative;
 import eu.dissco.core.digitalmediaderivativeservice.schema.DigitalMediaDerivative.DctermsType;
 import eu.dissco.core.digitalmediaderivativeservice.schema.Identifier;
 import eu.dissco.core.digitalmediaderivativeservice.utils.AgentUtils;
@@ -30,39 +31,50 @@ public class TestUtils {
   }
 
   public static DigitalMediaEvent givenDigitalMediaWithDerivativeEvent(int originalWidth,
-      int originalHeight, int width, int height)
+      int originalHeight, int width, int height, int thumbnailWidth, int thumbnailHeight)
       throws JsonProcessingException {
     return new DigitalMediaEvent(Collections.emptySet(),
         new DigitalMediaWrapper("ods:DigitalMedia",
-            givenDigitalMediaWithDerivative(originalWidth, originalHeight, width, height),
+            givenDigitalMediaWithDerivative(originalWidth, originalHeight, width, height,
+                thumbnailWidth, thumbnailHeight),
             null), false, false);
   }
 
   public static DigitalMedia givenDigitalMediaWithDerivative(int originalWidth, int originalHeight,
-      int width, int height)
+      int width, int height, int thumbnailWidth, int thumbnailHeight)
       throws JsonProcessingException {
     var digitalMedia = givenDigitalMedia();
     digitalMedia.setExifPixelXDimension(originalWidth);
     digitalMedia.setExifPixelYDimension(originalHeight);
-    var derivative = new eu.dissco.core.digitalmediaderivativeservice.schema.DigitalMediaDerivative()
-        .withDctermsTitle("Derivative of https://doi.org/TEST/WKT-SQB-ZNC")
+    digitalMedia.getOdsHasMediaDerivatives().add(givenDigitalMediaDerivative(width, height, false));
+    digitalMedia.getOdsHasMediaDerivatives()
+        .add(givenDigitalMediaDerivative(thumbnailWidth, thumbnailHeight, true));
+    return digitalMedia;
+  }
+
+  private static DigitalMediaDerivative givenDigitalMediaDerivative(int width, int height,
+      boolean isThumbnail) {
+    return new DigitalMediaDerivative()
+        .withDctermsTitle(
+            (isThumbnail ? "Thumbnail" : "Derivative") + " of https://doi.org/TEST/WKT-SQB-ZNC")
         .withDctermsDescription(
-            "Image Derivative created by DiSSCo after creation of the Digital Media, maximum size of 2048.0 pixels on the longest side.")
+            "Image " + (isThumbnail ? "Thumbnail" : "Derivative")
+                + " created by DiSSCo after creation of the Digital Media, maximum size of "
+                + (isThumbnail ? "400.0" : "2048.0") + " pixels on the longest side.")
         .withDctermsModified(Date.from(CREATED))
         .withDctermsCreated(Date.from(CREATED))
         .withDctermsRights("http://creativecommons.org/publicdomain/zero/1.0/legalcode")
         .withDctermsType(DctermsType.STILL_IMAGE)
         .withDctermsFormat("image/jpeg")
         .withAcAccessURI(
-            "https://dev.dissco.tech/api/dm/v1/TEST/WKT-SQB-ZNC/derivative")
+            "https://dev.dissco.tech/api/dm/v1/TEST/WKT-SQB-ZNC/" + (isThumbnail ? "thumbnail"
+                : "derivative"))
         .withExifPixelXDimension(width)
         .withExifPixelYDimension(height)
         .withOdsHasAgents(List.of(AgentUtils.createMachineAgent("DiSSCo Media Derivative Service",
             "https://doi.org/10.5281/zenodo.17935570", "media-derivative-service",
             Identifier.DctermsType.DOI,
             Type.SCHEMA_SOFTWARE_APPLICATION)));
-    digitalMedia.setOdsHasMediaDerivatives(Collections.singletonList(derivative));
-    return digitalMedia;
   }
 
 

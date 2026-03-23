@@ -55,7 +55,7 @@ class S3RepositoryTest {
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
-    s3Repository.uploadResults(image, "https://doi.org/TEST/XXX-XXX-XXX");
+    s3Repository.uploadResults(image, "https://doi.org/TEST/XXX-XXX-XXX", false);
 
     // Then
     then(mockResponse).should().get();
@@ -75,7 +75,7 @@ class S3RepositoryTest {
 
     // When  / Then
     assertThrows(S3UploadException.class,
-        () -> s3Repository.uploadResults(image, "https://doi.org/TEST/XXX-XXX-XXX"));
+        () -> s3Repository.uploadResults(image, "https://doi.org/TEST/XXX-XXX-XXX", false));
   }
 
   @Test
@@ -92,6 +92,6 @@ class S3RepositoryTest {
 
     // When  / Then
     assertThrows(S3UploadException.class,
-        () -> s3Repository.uploadResults(image, "https://doi.org/TEST/XXX-XXX-XXX"));
+        () -> s3Repository.uploadResults(image, "https://doi.org/TEST/XXX-XXX-XXX", true));
   }
 }
