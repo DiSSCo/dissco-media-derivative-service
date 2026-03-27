@@ -1,8 +1,8 @@
 package eu.dissco.core.digitalmediaderivativeservice.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.digitalmediaderivativeservice.schema.DigitalMedia;
+import tools.jackson.databind.JsonNode;
 
 
 public record DigitalMediaWrapper(

@@ -1,7 +1,5 @@
 package eu.dissco.core.digitalmediaderivativeservice.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.digitalmediaderivativeservice.domain.DigitalMediaEvent;
 import eu.dissco.core.digitalmediaderivativeservice.domain.DigitalMediaWrapper;
 import eu.dissco.core.digitalmediaderivativeservice.exception.ProcessingFailedException;
@@ -28,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.json.JsonMapper;
 
 @Slf4j
 @Service
@@ -36,7 +35,7 @@ public class ProcessingService {
 
   public static final String DOI_PROXY = "https://doi.org/";
 
-  private final ObjectMapper objectMapper;
+  private final JsonMapper jsonMapper;
   private final ApplicationProperties properties;
   private final S3Repository s3Repository;
   private final RabbitMqPublisherService rabbitMqPublisherService;
@@ -75,7 +74,7 @@ public class ProcessingService {
   }
 
   public void handleMessage(CreateUpdateTombstoneEvent event)
-      throws ProcessingFailedException, JsonProcessingException {
+      throws ProcessingFailedException {
     if (ProvActivity.Type.ODS_CREATE.equals(event.getProvActivity().getType())) {
       log.info("Received Provenance: {}", event);
       var media = retrieveMediaObject(event);
@@ -113,15 +112,10 @@ public class ProcessingService {
         : properties.getMaxDerivativeImageSize();
   }
 
-  private void publishDigitalMedia(DigitalMedia media) throws ProcessingFailedException {
-    try {
-      var wrapper = new DigitalMediaWrapper(media.getType(), media, null);
-      var event = new DigitalMediaEvent(Collections.emptySet(), wrapper, false, false);
-      rabbitMqPublisherService.publishDigitalMediaEvent(event);
-    } catch (JsonProcessingException ex) {
-      log.error("Failed to republish DigitalMedia {}", media.getId(), ex);
-      throw new ProcessingFailedException("Failed to republish DigitalMedia " + media.getId());
-    }
+  private void publishDigitalMedia(DigitalMedia media) {
+    var wrapper = new DigitalMediaWrapper(media.getType(), media, null);
+    var event = new DigitalMediaEvent(Collections.emptySet(), wrapper, false, false);
+    rabbitMqPublisherService.publishDigitalMediaEvent(event);
   }
 
   private void updateOriginalMedia(DigitalMedia media, BufferedImage originalImage) {
@@ -180,13 +174,13 @@ public class ProcessingService {
   }
 
   private DigitalMedia retrieveMediaObject(CreateUpdateTombstoneEvent event)
-      throws JsonProcessingException, ProcessingFailedException {
+      throws ProcessingFailedException {
     if (event.getProvEntity().getType().equals("ods:DigitalMedia")) {
-      return objectMapper.convertValue(event.getProvEntity().getProvValue(),
+      return jsonMapper.convertValue(event.getProvEntity().getProvValue(),
           DigitalMedia.class);
     }
     throw new ProcessingFailedException(
-        "Invalid provenance entity: " + objectMapper.writeValueAsString(event));
+        "Invalid provenance entity: " + jsonMapper.writeValueAsString(event));
   }
 
   private Pair<Float, Float> getDimensions(BufferedImage originalImage, Float maxImageSize) {
